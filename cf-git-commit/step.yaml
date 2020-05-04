@@ -30,7 +30,6 @@ metadata:
           title: Commit changes and push
           type: dimag/git-pr-commit
           arguments:
-            WORKING_DIRECTORY: '${{main_clone}}'
             GITHUB_REPO_OWNER: '${{CF_REPO_OWNER}}'
             GITHUB_REPO_NAME: '${{CF_REPO_NAME}}'
             GIT_PROVIDER_NAME: 'github'
@@ -54,9 +53,14 @@ spec:
       "properties": {
           "WORKING_DIRECTORY": {
               "type": "string",
-              "description": "The directory from which the commands are executed. It can be an explicit path in the container’s file system, or a variable that references another step. The default working_directory is the cloned repository directory and not the working directory specified by the image. If you need to use the default working directory of the image use IMAGE_WORK_DIR.",
+              "description": "The directory from which the commands are executed. It can be an explicit path in the container’s file system. The default WORKING_DIRECTORY is the cloned repository directory and not the working directory specified by the image.",
               "examples": ["/codefresh/volume/${{CF_REPO_NAME}}/foo"],
               "default": "/codefresh/volume/${{CF_REPO_NAME}}"
+          },
+          "TARGET_BRANCH": {
+              "type": "string",
+              "description": "Name of the target branch to commit and push. The default WORKING_DIRECTORY is master",
+              "default": "master"
           },
           "GIT_PROVIDER_NAME": {
               "type": "string",
@@ -102,6 +106,9 @@ spec:
       title: "Commit and push"
       image: alpine/git:latest
       environment:
+        - TARGET_BRANCH=${{TARGET_BRANCH}}
+        - GITHUB_REPO_OWNER=${{GITHUB_REPO_OWNER}}
+        - GITHUB_REPO_NAME=${{GITHUB_REPO_NAME}}
         - GIT_USER_NAME=${{GIT_USER_NAME}}
         - GIT_USER_EMAIL=${{GIT_USER_EMAIL}}
         - COMMIT_MESSAGE=${{COMMIT_MESSAGE}}
@@ -110,5 +117,7 @@ spec:
         - cd ${WORKING_DIRECTORY}
         - git config --global user.name ${GIT_USER_NAME}
         - git config --global user.email ${GIT_USER_EMAIL}
+        - git checkout ${TARGET_BRANCH}
         - git commit -a -m "${COMMIT_MESSAGE}"
+        - git status
         - git push https://$GIT_USER_NAME:$GITHUB_TOKEN@github.com/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME.git
