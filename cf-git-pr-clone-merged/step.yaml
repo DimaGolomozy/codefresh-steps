@@ -6,7 +6,7 @@ metadata:
   isPublic: true
   description: Clone a pull request merged
   sources:
-    - 'https://github.com/dimagolomozy/codefresh-steps/cf-git-pr-clone-merged'
+    - 'https://github.com/dimagolomozy/codefresh-steps/tree/master/cf-git-pr-clone-merged'
   stage: graduated
   categories:
     - git
