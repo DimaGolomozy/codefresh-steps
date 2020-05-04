@@ -30,6 +30,7 @@ metadata:
           title: Commit changes and push
           type: dimag/git-pr-commit
           arguments:
+            WORKING_DIRECTORY: '${{main_clone}}'
             GITHUB_REPO_OWNER: '${{CF_REPO_OWNER}}'
             GITHUB_REPO_NAME: '${{CF_REPO_NAME}}'
             GIT_PROVIDER_NAME: 'github'
@@ -51,6 +52,12 @@ spec:
           "GIT_PROVIDER_NAME"
       ],
       "properties": {
+          "WORKING_DIRECTORY": {
+              "type": "string",
+              "description": "The directory from which the commands are executed. It can be an explicit path in the container’s file system, or a variable that references another step. The default working_directory is the cloned repository directory and not the working directory specified by the image. If you need to use the default working directory of the image use IMAGE_WORK_DIR.",
+              "examples": ["/codefresh/volume/${{CF_REPO_NAME}}/foo"],
+              "default": "/codefresh/volume/${{CF_REPO_NAME}}"
+          },
           "GIT_PROVIDER_NAME": {
               "type": "string",
               "description": "Name of git provider to use from Codefresh integrations screen"
@@ -98,7 +105,9 @@ spec:
         - GIT_USER_NAME=${{GIT_USER_NAME}}
         - GIT_USER_EMAIL=${{GIT_USER_EMAIL}}
         - COMMIT_MESSAGE=${{COMMIT_MESSAGE}}
+        - WORKING_DIRECTORY=${{WORKING_DIRECTORY}}
       commands:
+        - cd ${WORKING_DIRECTORY}
         - git config --global user.name ${GIT_USER_NAME}
         - git config --global user.email ${GIT_USER_EMAIL}
         - git commit -a -m "${COMMIT_MESSAGE}"
