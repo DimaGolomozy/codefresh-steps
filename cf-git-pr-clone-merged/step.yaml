@@ -1,0 +1,92 @@
+version: '1.0'
+kind: step-type
+metadata:
+  name: dimag/git-pr-clone-merged
+  version: 0.0.1
+  isPublic: true
+  description: Clone a pull request merged
+  sources:
+    - 'https://github.com/dimagolomozy/codefresh-steps/cf-git-pr-clone-merged'
+  stage: graduated
+  categories:
+    - git
+  icon:
+    type: svg
+    url: https://raw.githubusercontent.com/DimaGolomozy/codefresh-steps/master/cf-git-pr-clone-merged/icon-2.svg
+    background: '#0B3E49'
+  maintainers:
+    - name: Dima Golomozy
+  examples:
+    - workflow:
+        main_clone:
+          title: Clone Pull Request Merged
+          type: dimag/git-pr-clone-merged
+          arguments:
+            CF_REPO_OWNER: '${{CF_REPO_OWNER}}'
+            CF_REPO_NAME: '${{CF_REPO_NAME}}'
+            REVISION: '${{CF_REVISION}}'
+  latest: true
+spec:
+  arguments: |
+    {
+      "definitions": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "patterns": [],
+      "required": [
+          "GITHUB_REPO_OWNER",
+          "GITHUB_REPO_NAME",
+          "REVISION"
+      ],
+      "properties": {
+          "TARGET_BRANCH": {
+              "type": "string",
+              "description": "Name of the target branch to merge. The default is ${{CF_PULL_REQUEST_TARGET}}",
+              "default": "${{CF_PULL_REQUEST_TARGET}}"
+          },
+          "GITHUB_REPO_OWNER": {
+              "type": "string",
+              "description": "Name of repo owner"
+          },
+          "GITHUB_REPO_NAME": {
+              "type": "string",
+              "description": "Name of repo"
+          },
+          "REVISION": {
+              "type": "string",
+              "description": "The revision of the repository you are checking out. It can be a revision hash or a branch name. The default value is master."
+          },
+          "GIT_USER_NAME": {
+              "type": "string",
+              "description": "The user name to sign in the merge commit message. Default value: codefresh",
+              "default": "codefresh"
+          },
+          "GIT_USER_EMAIL": {
+              "type": "string",
+              "description": "The user email to sing in the merge commit message. Default value: codefresh",
+              "default": "codefresh"
+          }
+      }
+    }
+
+  steps:
+    main_clone:
+      type: git-clone
+      repo: '${{GITHUB_REPO_OWNER}}/${GITHUB_REPO_NAME}'
+      revision: '${{REVISION}}'
+
+    merge:
+      image: alpine/git:latest
+      working_directory: "${{main_clone}}/"
+      environment:
+        - TARGET_BRANCH=${{TARGET_BRANCH}}
+        - GIT_USER_NAME=${{GIT_USER_NAME}}
+        - GIT_USER_EMAIL=${{GIT_USER_EMAIL}}
+        - REVISION=${{REVISION}}
+      commands:
+        - git config --global user.name ${GIT_USER_NAME}
+        - git config --global user.email ${GIT_USER_EMAIL}
+
+        - git checkout ${TARGET_BRANCH}
+        - git merge -m "merged" --quiet $REVISION
