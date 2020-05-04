@@ -12,7 +12,7 @@ metadata:
     - git
   icon:
     type: svg
-    url: https://cdn.jsdelivr.net/gh/codefresh-io/steps/incubating/github-pr/icon.svg
+    url: https://raw.githubusercontent.com/DimaGolomozy/codefresh-steps/master/cf-git-commit/icon.svg
     background: "#f4f4f4"
   maintainers:
     - name: Dima Golomozy
