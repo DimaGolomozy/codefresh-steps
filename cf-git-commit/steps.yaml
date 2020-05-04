@@ -1,0 +1,105 @@
+version: '1.0'
+kind: step-type
+metadata:
+  name: dimag/git-pr-commit
+  version: 0.0.1
+  isPublic: true
+  description: This pipeline plugin commits changes and pushes to remote
+  sources:
+    - 'https://github.com/dimagolomozy/codefresh_steps/cf-git-commit'
+  stage: graduated
+  categories:
+    - git
+  icon:
+    type: svg
+    url: https://cdn.jsdelivr.net/gh/codefresh-io/steps/incubating/github-pr/icon.svg
+    background: "#f4f4f4"
+  maintainers:
+    - name: Dima Golomozy
+  examples:
+    - workflow:
+        commit_and_push:
+          title: Commit changes and push
+          type: dimag/git-pr-commit
+          arguments:
+            GITHUB_REPO_OWNER: '${{CF_REPO_OWNER}}'
+            GITHUB_REPO_NAME: '${{CF_REPO_NAME}}'
+            GIT_PROVIDER_NAME: 'github'
+    - workflow:
+        commit_and_push:
+          title: Commit changes and push
+          type: dimag/git-pr-commit
+          arguments:
+            GITHUB_REPO_OWNER: '${{CF_REPO_OWNER}}'
+            GITHUB_REPO_NAME: '${{CF_REPO_NAME}}'
+            GIT_PROVIDER_NAME: 'github'
+            GIT_USER_NAME: 'my-name'
+            GIT_USER_EMAIL: 'my-name@email.com'
+            COMMIT_MESSAGE: 'my comment'
+  latest: true
+spec:
+  arguments: |
+    {
+      "definitions": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "patterns": [],
+      "required": [
+          "GITHUB_REPO_OWNER",
+          "GITHUB_REPO_NAME",
+          "GIT_PROVIDER_NAME"
+      ],
+      "properties": {
+          "GIT_PROVIDER_NAME": {
+              "type": "string",
+              "description": "Name of git provider to use from Codefresh integrations screen"
+          },
+          "GITHUB_REPO_OWNER": {
+              "type": "string",
+              "description": "Name of repo owner"
+          },
+          "GITHUB_REPO_NAME": {
+              "type": "string",
+              "description": "Name of repo"
+          },
+          "GIT_USER_NAME": {
+              "type": "string",
+              "description":"The user name to sign in the merge commit message. Default value: codefresh",
+              "default": "codefresh"
+          },
+          "GIT_USER_EMAIL": {
+              "type": "string",
+              "description": "The user email to sing in the merge commit message. Default value: codefresh",
+              "default": "codefresh"
+          },
+          "COMMIT_MESSAGE": {
+              "type": "string",
+              "description": "Text body of the comment to be created",
+              "default": "freshy code from codefresh"
+          }
+      }
+    }
+
+  steps:
+    get_github_token:
+      title: "Get token"
+      image: codefresh/cli
+      environment:
+        - GIT_PROVIDER_NAME=${{GIT_PROVIDER_NAME}}
+      commands:
+        - export GITHUB_TOKEN=$(codefresh get context $GIT_PROVIDER_NAME --decrypt -o yaml | yq -r -c .spec.data.auth.password)
+        - echo GITHUB_TOKEN=$GITHUB_TOKEN >> /meta/env_vars_to_export
+
+    commit_and_push:
+      title: "Commit and push"
+      image: alpine/git:latest
+      environment:
+        - GIT_USER_NAME=${{GIT_USER_NAME}}
+        - GIT_USER_EMAIL=${{GIT_USER_EMAIL}}
+        - COMMIT_MESSAGE=${{COMMIT_MESSAGE}}
+      commands:
+        - git config --global user.name ${GIT_USER_NAME}
+        - git config --global user.email ${GIT_USER_EMAIL}
+        - git commit -a -m "${COMMIT_MESSAGE}"
+        - git push https://$GIT_USER_NAME:$GITHUB_TOKEN@github.com/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME.git
