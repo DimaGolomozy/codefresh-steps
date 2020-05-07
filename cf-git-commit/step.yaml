@@ -57,11 +57,6 @@ spec:
               "examples": ["/codefresh/volume/${{CF_REPO_NAME}}/foo"],
               "default": "/codefresh/volume/${{CF_REPO_NAME}}"
           },
-          "TARGET_BRANCH": {
-              "type": "string",
-              "description": "Name of the target branch to commit and push. The default WORKING_DIRECTORY is master",
-              "default": "master"
-          },
           "GIT_PROVIDER_NAME": {
               "type": "string",
               "description": "Name of git provider to use from Codefresh integrations screen"
@@ -106,7 +101,6 @@ spec:
       title: "Commit and push"
       image: alpine/git:latest
       environment:
-        - TARGET_BRANCH=${{TARGET_BRANCH}}
         - GITHUB_REPO_OWNER=${{GITHUB_REPO_OWNER}}
         - GITHUB_REPO_NAME=${{GITHUB_REPO_NAME}}
         - GIT_USER_NAME=${{GIT_USER_NAME}}
@@ -117,7 +111,6 @@ spec:
         - cd ${WORKING_DIRECTORY}
         - git config --global user.name ${GIT_USER_NAME}
         - git config --global user.email ${GIT_USER_EMAIL}
-        - git checkout ${TARGET_BRANCH}
         - git commit -a -m "${COMMIT_MESSAGE}"
         - git status
         - git push https://$GIT_USER_NAME:$GITHUB_TOKEN@github.com/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME.git
