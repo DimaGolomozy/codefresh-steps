@@ -1,0 +1,88 @@
+version: '1.0'
+kind: step-type
+metadata:
+  name: dimag/git-version-bump
+  version: 0.0.1
+  isPublic: true
+  description: Resolve and bump the next sem version from github tags
+  sources:
+    - 'https://github.com/dimagolomozy/codefresh-steps/tree/master/cf-git-version-bump'
+  stage: graduated
+  categories:
+    - git
+  icon:
+    type: svg
+    url: https://raw.githubusercontent.com/DimaGolomozy/codefresh-steps/master/cf-git-version-bump/icon.svg
+    background: "#f4f4f4"
+  maintainers:
+    - name: Dima Golomozy
+  examples:
+    - workflow:
+        bump_version:
+          title: Resolve next version
+          type: dimag/git-version-bump
+          arguments:
+            SEMVERSIONER_PART: minor
+        checkVersion:
+          image: alpine
+          commands:
+            - echo VERSION=${{steps.bump_version.output.SEMVERSIONER_RESULT}}
+  latest: true
+spec:
+  arguments: |-
+    {
+      "definitions": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "patterns": [],
+      "required": [],
+      "properties": {
+          "REPO_NAME": {
+              "type": "string",
+              "description": "Repository name. Default will be $CF_REPO_NAME"
+          },
+          "TAG_PREFIX": {
+              "type": "string",
+              "description": "Tag prefix before the version (default is 'v', like v1.2.3)"
+          },
+          "SEMVERSIONER_PART": {
+              "type": "string",
+              "description": "Part of the semver to be bumped. Options: 'major', 'minor' and 'patch'. Default: 'patch'",
+              "default": "patch"
+          }
+      }
+    }
+
+  returns: |-
+    {
+        "definitions": {},
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": true,
+        "patterns": [],
+        "required": [
+          "SEMVERSIONER_RESULT"
+        ],
+        "properties": {
+            "SEMVERSIONER_RESULT": {
+                "type": "string",
+                "description": "Result of the action performed. If SEMVERSIONER_ACTION is 'bump', the result will be a semver version. If the SEMVERSIONER_ACTION is 'compare', the result will be '-1', '0' or '1'"
+            }
+        }
+    }
+
+  steps:
+    get_current_version:
+      image: alpine/git:latest
+      commands:
+        - cd ${REPO_NAME:-${CF_REPO_NAME}}
+        - TMP_CURRENT_TAG=$(git tag --sort=committerdate | tail -1)
+        - export TMP_CURRENT_VERSION=${TMP_CURRENT_TAG/${TAG_PREFIX:-v}/""}
+        - echo TMP_CURRENT_VERSION=$TMP_CURRENT_VERSION >> /meta/env_vars_to_export
+
+    next_version:
+      image: marcelocorreia/semver
+      commands:
+        - export SEMVERSIONER_RESULT=$(semver -c -i ${SEMVERSIONER_PART} ${TMP_CURRENT_VERSION})
+        - echo SEMVERSIONER_RESULT=$SEMVERSIONER_RESULT >> /meta/env_vars_to_export
