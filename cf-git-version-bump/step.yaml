@@ -17,7 +17,8 @@ metadata:
   maintainers:
     - name: Dima Golomozy
   examples:
-    - workflow:
+    - description: easy use
+      workflow:
         bump_version:
           title: Resolve next version
           type: dimag/git-version-bump
@@ -26,7 +27,19 @@ metadata:
         checkVersion:
           image: alpine
           commands:
-            - echo VERSION=${{steps.bump_version.output.SEMVERSIONER_RESULT}}
+            - echo new version is ${{steps.bump_version.output.SEMVERSIONER_RESULT}}
+    - description: Using with TAG_PREFIX
+      workflow:
+        bump_version:
+          title: Resolve next version
+          type: dimag/git-version-bump
+          arguments:
+            SEMVERSIONER_PART: minor
+            TAG_PREFIX: 'version-'
+        checkVersion:
+          image: alpine
+          commands:
+            - echo new version is ${SEMVERSIONER_RESULT}
   latest: true
 spec:
   arguments: |-
@@ -86,3 +99,4 @@ spec:
       commands:
         - export SEMVERSIONER_RESULT=$(semver -c -i ${SEMVERSIONER_PART} ${TMP_CURRENT_VERSION})
         - echo SEMVERSIONER_RESULT=$SEMVERSIONER_RESULT >> /meta/env_vars_to_export
+        - cf_export SEMVERSIONER_RESULT
